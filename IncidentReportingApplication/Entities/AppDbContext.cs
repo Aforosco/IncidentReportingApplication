@@ -1,16 +1,14 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using IncidentReportingApplication.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 
 namespace IncidentReportingApplication.Entities
 {
-        public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<ApplicationUser>
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-            public AppDbContext(DbContextOptions<AppDbContext> options)
-                : base(options)
-            {
-           
 
         }
 

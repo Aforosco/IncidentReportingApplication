@@ -9,7 +9,7 @@ namespace IncidentReportingApplication.Models
             [Key]
             public int Id { get; set; }
 
-            [Required]
+            
             [MaxLength(20)]
             public string? IncidentNumber { get; set; }  // Auto-generated (e.g., INC-2025-0001)
 
@@ -32,7 +32,7 @@ namespace IncidentReportingApplication.Models
             [MaxLength(200)]
             public string? Location { get; set; }
 
-            public DateTime CreatedAt { get; set; }
+            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
             public DateTime? DueDate { get; set; }
 
             [MaxLength(100)]
@@ -42,6 +42,6 @@ namespace IncidentReportingApplication.Models
             public bool IsEscalated { get; set; } = false;
         }
     }
-
+ 
 
 

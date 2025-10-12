@@ -1,8 +1,9 @@
-﻿using IncidentReportingApplication.Models;
+﻿using IncidentReportingApplication.Entities;
+using IncidentReportingApplication.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IncidentReportingApplication.Entities;
-using System;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace IncidentReportingApplication.Controllers
 {
@@ -15,7 +16,7 @@ namespace IncidentReportingApplication.Controllers
         {
             _context = context;
         }
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll()
             => Ok(await _context.Incidents.ToListAsync());
