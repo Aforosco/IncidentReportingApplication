@@ -14,11 +14,16 @@ namespace IncidentReportingApplication.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _config;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration config)
+        public AuthController(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration config)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _config = config;
         }
 
@@ -36,6 +41,9 @@ namespace IncidentReportingApplication.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
+            // Assign default "User" role
+            await _userManager.AddToRoleAsync(user, "User");
+
             return Ok(new { message = "User registered successfully" });
         }
 
@@ -46,22 +54,38 @@ namespace IncidentReportingApplication.Controllers
             if (user == null || !await _userManager.CheckPasswordAsync(user, dto.Password))
                 return Unauthorized();
 
-            var token = GenerateJwtToken(user);
-            return Ok(new { token });
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = await GenerateJwtToken(user);
+
+            return Ok(new
+            {
+                token,
+                role = roles.FirstOrDefault() ?? "User",
+                email = user.Email,
+                fullName = user.FullName
+            });
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             var jwtConfig = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                 new Claim("uid", user.Id),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Email, user.Email)
             };
+
+            // Add role claims
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: jwtConfig["Issuer"],
@@ -73,9 +97,19 @@ namespace IncidentReportingApplication.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        // Optional: Endpoint to assign admin role (for testing)
+        [HttpPost("make-admin/{email}")]
+        public async Task<IActionResult> MakeAdmin(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return NotFound("User not found");
+
+            await _userManager.RemoveFromRoleAsync(user, "User");
+            await _userManager.AddToRoleAsync(user, "Admin");
+
+            return Ok(new { message = $"{email} is now an admin" });
+        }
     }
-
- 
-
-   
 }

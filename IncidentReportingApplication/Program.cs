@@ -1,11 +1,10 @@
-using IncidentReportingApplication.Entities;
+﻿using IncidentReportingApplication.Entities;
 using IncidentReportingApplication.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,20 +45,21 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhost",
         policy => policy
             .WithOrigins("http://localhost:5173",
-                 "http://localhost:5173",
-                "http://localhost:5174",  
-                "https://localhost:5173",
+                 "https://localhost:5173",
+                "http://localhost:5174",
                 "https://localhost:5174")
             .AllowAnyHeader()
             .AllowAnyMethod()
     );
 });
+builder.Services.AddScoped<IncidentReportingApplication.Services.IEmailService,
+    IncidentReportingApplication.Services.EmailService>();
 
-
-
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -70,7 +70,6 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API for managing incidents with JWT authentication"
     });
 
-    // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
@@ -98,7 +97,69 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Seed roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { "Admin", "User" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var config = builder.Configuration.GetSection("AdminUser");  // ← HERE: Reading from appsettings
+        string adminEmail = config["Email"];                          // ← HERE: Gets email
+        string adminPassword = config["Password"];                    // ← HERE: Gets password
+
+        Console.WriteLine($"Checking for admin user: {adminEmail}");
+
+        if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
+        {
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                Console.WriteLine("Admin user not found. Creating...");
+
+                adminUser = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    EmailConfirmed = true,
+                    FullName = "System Administrator"
+                };
+
+                var result = await userManager.CreateAsync(adminUser, adminPassword);  // ← HERE: Creates in DB
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");  // ← HERE: Assigns Admin role
+                    Console.WriteLine("✓ Admin user created successfully in DATABASE!");
+                    Console.WriteLine($"  Email: {adminEmail}");
+                    Console.WriteLine($"  Role: Admin");
+                }
+                else
+                {
+                    Console.WriteLine("✗ Failed to create admin user:");
+                    foreach (var error in result.Errors)
+                        Console.WriteLine($"  - {error.Description}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("✓ Admin user already exists in database.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("⚠ AdminUser credentials not configured in appsettings.json");
+        }
+    }
+}
+
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -112,7 +173,5 @@ app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

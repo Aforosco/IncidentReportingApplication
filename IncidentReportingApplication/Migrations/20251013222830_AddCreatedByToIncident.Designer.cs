@@ -4,6 +4,7 @@ using IncidentReportingApplication.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IncidentReportingApplication.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251013222830_AddCreatedByToIncident")]
+    partial class AddCreatedByToIncident
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,14 +108,6 @@ namespace IncidentReportingApplication.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -156,8 +151,6 @@ namespace IncidentReportingApplication.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("IncidentNumber")
                         .IsUnique()
                         .HasFilter("[IncidentNumber] IS NOT NULL");
@@ -170,7 +163,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 1,
                             AssignedTo = "user1@company.com",
                             CreatedAt = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #1 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0001",
@@ -185,7 +177,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 2,
                             AssignedTo = "user2@company.com",
                             CreatedAt = new DateTime(2025, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #2 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0002",
@@ -200,7 +191,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 3,
                             AssignedTo = "user3@company.com",
                             CreatedAt = new DateTime(2025, 9, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #3 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0003",
@@ -215,7 +205,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 4,
                             AssignedTo = "user4@company.com",
                             CreatedAt = new DateTime(2025, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #4 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0004",
@@ -230,7 +219,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 5,
                             AssignedTo = "user5@company.com",
                             CreatedAt = new DateTime(2025, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #5 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0005",
@@ -246,7 +234,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 6,
                             AssignedTo = "user6@company.com",
                             CreatedAt = new DateTime(2025, 9, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #6 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0006",
@@ -261,7 +248,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 7,
                             AssignedTo = "user7@company.com",
                             CreatedAt = new DateTime(2025, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #7 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0007",
@@ -276,7 +262,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 8,
                             AssignedTo = "user8@company.com",
                             CreatedAt = new DateTime(2025, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #8 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0008",
@@ -291,7 +276,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 9,
                             AssignedTo = "user9@company.com",
                             CreatedAt = new DateTime(2025, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #9 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0009",
@@ -306,7 +290,6 @@ namespace IncidentReportingApplication.Migrations
                             Id = 10,
                             AssignedTo = "user10@company.com",
                             CreatedAt = new DateTime(2025, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #10 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0010",
@@ -450,15 +433,6 @@ namespace IncidentReportingApplication.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("IncidentReportingApplication.Models.Incident", b =>
-                {
-                    b.HasOne("IncidentReportingApplication.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
