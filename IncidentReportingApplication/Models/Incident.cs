@@ -33,6 +33,7 @@ namespace IncidentReportingApplication.Models
         public string? Location { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+         public DateTime? updatedAt { get; set; } 
 
         public DateTime? DueDate { get; set; }
 

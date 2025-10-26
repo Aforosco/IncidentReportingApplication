@@ -23,28 +23,38 @@ namespace IncidentReportingApplication.Controllers
         }
 
         // GET: api/incidents
+        
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Incident>>> GetIncidents()
+        public async Task<ActionResult<object>> GetIncidents(int page = 1)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+            int pageSize = 10;
 
-            // Admin sees all incidents, User sees only their own
-            if (userRole == "Admin")
+            IQueryable<Incident> query = _context.Incidents;
+
+            // Filter based on role
+            if (userRole != "Admin")
             {
-                return await _context.Incidents
-                    .OrderByDescending(i => i.CreatedAt)
-                    .ToListAsync();
+                query = query.Where(i => i.CreatedBy == userEmail);
             }
-            else
+
+            var totalCount = await query.CountAsync();
+            var incidents = await query
+                .OrderByDescending(i => i.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new
             {
-                return await _context.Incidents
-                    .Where(i => i.CreatedBy == userEmail)
-                    .OrderByDescending(i => i.CreatedAt)
-                    .ToListAsync();
-            }
+                incidents = incidents,
+                totalCount = totalCount,
+                currentPage = page,
+                pageSize = pageSize,
+                totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+            });
         }
-
         // GET: api/incidents/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Incident>> GetIncident(int id)
@@ -123,8 +133,9 @@ namespace IncidentReportingApplication.Controllers
                 return NotFound();
 
             // Only Admin can update any incident
-            // Users cannot update their own incidents (only view)
-            if (userRole != "Admin")
+         
+
+            if (userRole != "Admin" && existingIncident.CreatedBy != userEmail)
                 return Forbid();
 
             // Track old status for email notification
@@ -137,6 +148,7 @@ namespace IncidentReportingApplication.Controllers
             existingIncident.ResolutionNotes = incident.ResolutionNotes;
             existingIncident.IsEscalated = incident.IsEscalated;
             existingIncident.DueDate = incident.DueDate;
+            existingIncident.updatedAt = DateTime.UtcNow;
 
             // Don't allow changing CreatedBy
             // existingIncident.CreatedBy stays the same
@@ -183,7 +195,7 @@ namespace IncidentReportingApplication.Controllers
         }
 
         // DELETE: api/incidents/5
-        [Authorize(Roles = "Admin")]
+       // [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteIncident(int id)
         {
