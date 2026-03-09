@@ -9,8 +9,9 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// Instead of UseSqlServer, use UseNpgsql
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -47,7 +48,7 @@ builder.Services.AddCors(options =>
             .WithOrigins("http://localhost:5173",
                  "https://localhost:5173",
                 "http://localhost:5174",
-                "https://localhost:5174")
+                "https://localhost:5174","http://localhost:8080")
             .AllowAnyHeader()
             .AllowAnyMethod()
     );
@@ -96,6 +97,25 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        logger.LogInformation("Applying database migrations...");
+        context.Database.Migrate();
+        logger.LogInformation("✅ Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "❌ An error occurred while migrating the database");
+        throw; // Stop the app if migration fails
+    }
+}
 
 // Seed roles
 using (var scope = app.Services.CreateScope())
@@ -160,16 +180,15 @@ using (var scope = app.Services.CreateScope())
 
 
 
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Incident API V1");
     });
-}
 
-app.UseHttpsRedirection();
+
+//app.UseHttpsRedirection();
 app.UseCors("AllowLocalhost");
 app.UseAuthentication();
 app.UseAuthorization();

@@ -5,7 +5,7 @@
 namespace IncidentReportingApplication.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCreatedByToIncident : Migration
+    public partial class Appsetting : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -24,26 +24,43 @@ namespace IncidentReportingApplication.Controllers
 
         // GET: api/incidents
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Incident>>> GetIncidents()
-        {
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+      // GET: api/incidents
+[HttpGet]
+public async Task<ActionResult<object>> GetIncidents([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+{
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // Admin sees all incidents, User sees only their own
-            if (userRole == "Admin")
-            {
-                return await _context.Incidents
-                    .OrderByDescending(i => i.CreatedAt)
-                    .ToListAsync();
-            }
-            else
-            {
-                return await _context.Incidents
-                    .Where(i => i.CreatedBy == userEmail)
-                    .OrderByDescending(i => i.CreatedAt)
-                    .ToListAsync();
-            }
-        }
+    IQueryable<Incident> query = _context.Incidents;
+
+    // Admin sees all incidents, User sees only their own
+    if (userRole != "Admin")
+    {
+        query = query.Where(i => i.CreatedBy == userEmail);
+    }
+
+    // Get total count before pagination
+    var totalCount = await query.CountAsync();
+
+    // Apply pagination
+    var incidents = await query
+        .OrderByDescending(i => i.CreatedAt)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    // Return paginated response
+    var response = new
+    {
+        incidents = incidents,
+        totalCount = totalCount,
+        pageSize = pageSize,
+        currentPage = page,
+        totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+    };
+
+    return Ok(response);
+}
 
         // GET: api/incidents/5
         [HttpGet("{id}")]
@@ -92,8 +109,8 @@ namespace IncidentReportingApplication.Controllers
             {
                 await _emailService.SendIncidentCreatedEmailToAdmin(
                     incident.IncidentNumber,
-                    incident.Title,
-                    incident.Description,
+                    incident.Title?? "",
+                    incident.Description?? "",
                     incident.CreatedBy,
                     incident.CreatedAt
                 );
@@ -109,79 +126,91 @@ namespace IncidentReportingApplication.Controllers
         }
 
         // PUT: api/incidents/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateIncident(int id, Incident incident)
+       [HttpPut("{id}")]
+public async Task<IActionResult> UpdateIncident(int id, Incident incident)
+{
+    if (id != incident.Id)
+        return BadRequest();
+
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+    var existingIncident = await _context.Incidents.FindAsync(id);
+    if (existingIncident == null)
+        return NotFound();
+
+  
+    if (userRole != "Admin" && existingIncident.CreatedBy != userEmail)
+        return Forbid();
+
+    
+    var oldStatus = existingIncident.Status;
+
+    
+    if (userRole == "Admin")
+    {
+        existingIncident.Status = incident.Status;
+        existingIncident.Severity = incident.Severity;
+        existingIncident.AssignedTo = incident.AssignedTo;
+        existingIncident.ResolutionNotes = incident.ResolutionNotes;
+        existingIncident.IsEscalated = incident.IsEscalated;
+        existingIncident.DueDate = incident.DueDate;
+    }
+    else
+    {
+        // Regular users can update: Title, Description, Severity, ResolutionNotes, IsEscalated, DueDate
+        // But NOT Status or AssignedTo
+        existingIncident.Title = incident.Title;
+        existingIncident.Description = incident.Description;
+        existingIncident.Severity = incident.Severity;
+        existingIncident.ResolutionNotes = incident.ResolutionNotes;
+        existingIncident.IsEscalated = incident.IsEscalated;
+        existingIncident.DueDate = incident.DueDate;
+    }
+
+    // Don't allow changing CreatedBy
+    // existingIncident.CreatedBy stays the same
+
+    try
+    {
+        await _context.SaveChangesAsync();
+
+        // Send email notification if status changed (Admin only can change status)
+        if (oldStatus != existingIncident.Status)
         {
-            if (id != incident.Id)
-                return BadRequest();
-
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            var existingIncident = await _context.Incidents.FindAsync(id);
-            if (existingIncident == null)
-                return NotFound();
-
-            // Only Admin can update any incident
-            // Users cannot update their own incidents (only view)
-            if (userRole != "Admin")
-                return Forbid();
-
-            // Track old status for email notification
-            var oldStatus = existingIncident.Status;
-
-            // Update allowed fields
-            existingIncident.Status = incident.Status;
-            existingIncident.Severity = incident.Severity;
-            existingIncident.AssignedTo = incident.AssignedTo;
-            existingIncident.ResolutionNotes = incident.ResolutionNotes;
-            existingIncident.IsEscalated = incident.IsEscalated;
-            existingIncident.DueDate = incident.DueDate;
-
-            // Don't allow changing CreatedBy
-            // existingIncident.CreatedBy stays the same
-
             try
             {
-                await _context.SaveChangesAsync();
+                // Get user info for personalized email
+                var createdByUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == existingIncident.CreatedBy);
 
-                // Send email notification if status changed
-                if (oldStatus != existingIncident.Status)
-                {
-                    try
-                    {
-                        // Get user info for personalized email
-                        var createdByUser = await _context.Users
-                            .FirstOrDefaultAsync(u => u.Email == existingIncident.CreatedBy);
+                var recipientName = createdByUser?.FullName ?? existingIncident.CreatedBy;
 
-                        var recipientName = createdByUser?.FullName ?? existingIncident.CreatedBy;
-
-                        await _emailService.SendIncidentStatusChangedEmail(
-                            existingIncident.CreatedBy,
-                            recipientName,
-                            existingIncident.IncidentNumber,
-                            existingIncident.Title,
-                            oldStatus,
-                            existingIncident.Status
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log error but don't fail the request
-                        Console.WriteLine($"Failed to send status change email: {ex.Message}");
-                    }
-                }
+                await _emailService.SendIncidentStatusChangedEmail(
+                    existingIncident.CreatedBy?? "",
+                    recipientName?? "",
+                    existingIncident.IncidentNumber?? "",
+                    existingIncident.Title?? "",
+                    oldStatus?? "",
+                    existingIncident.Status?? ""
+                );
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                if (!IncidentExists(id))
-                    return NotFound();
-                throw;
+                // Log error but don't fail the request
+                Console.WriteLine($"Failed to send status change email: {ex.Message}");
             }
-
-            return NoContent();
         }
+    }
+    catch (DbUpdateConcurrencyException)
+    {
+        if (!IncidentExists(id))
+            return NotFound();
+        throw;
+    }
 
+    return NoContent();
+}
         // DELETE: api/incidents/5
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]

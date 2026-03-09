@@ -15,18 +15,18 @@ namespace IncidentReportingApplication.Entities
         // Our main Incidents table
         public DbSet<Incident> Incidents { get; set; }
 
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
-            {
-                base.OnModelCreating(modelBuilder);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-                // Optional: Configure table name and constraints
-                modelBuilder.Entity<Incident>(entity =>
-                {
-                    entity.ToTable("Incidents");
-                    entity.HasIndex(i => i.IncidentNumber).IsUnique();
-                    entity.Property(i => i.Severity).HasDefaultValue("Low");
-                    entity.Property(i => i.Status).HasDefaultValue("New");
-                });
+            // Optional: Configure table name and constraints
+            modelBuilder.Entity<Incident>(entity =>
+            {
+                entity.ToTable("Incidents");
+                entity.HasIndex(i => i.IncidentNumber).IsUnique();
+                entity.Property(i => i.Severity).HasDefaultValue("Low");
+                entity.Property(i => i.Status).HasDefaultValue("New");
+            });
 
             modelBuilder.Entity<Incident>().HasData(
     new Incident { Id = 1, IncidentNumber = "INC-2025-0001", Title = "Incident #1 - Data Breach", Description = "This is a detailed description of incident #1 involving a hardware failure that requires attention.", Severity = "Low", Status = "New", Location = "Building 2, Floor 1", CreatedAt = new DateTime(2025, 10, 1), CreatedBy = "System", DueDate = new DateTime(2025, 10, 11), AssignedTo = "user1@company.com", ResolutionNotes = null, IsEscalated = false },
@@ -42,6 +42,15 @@ namespace IncidentReportingApplication.Entities
 );
 
         }
+
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{
+    base.OnConfiguring(optionsBuilder);
+    
+    // Tell Npgsql to convert DateTime to UTC
+    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+}
+
     }
     }
 

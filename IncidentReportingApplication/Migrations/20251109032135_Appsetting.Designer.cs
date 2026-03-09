@@ -3,17 +3,17 @@ using System;
 using IncidentReportingApplication.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace IncidentReportingApplication.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251013222830_AddCreatedByToIncident")]
-    partial class AddCreatedByToIncident
+    [Migration("20251109032135_Appsetting")]
+    partial class Appsetting
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,64 +21,64 @@ namespace IncidentReportingApplication.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.9")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("IncidentReportingApplication.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -87,8 +87,7 @@ namespace IncidentReportingApplication.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                        .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -97,63 +96,71 @@ namespace IncidentReportingApplication.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AssignedTo")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("text");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("IncidentNumber")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("IsEscalated")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Location")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("ResolutionNotes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Severity")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasDefaultValue("Low");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasDefaultValue("New");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("IncidentNumber")
-                        .IsUnique()
-                        .HasFilter("[IncidentNumber] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Incidents", (string)null);
 
@@ -163,6 +170,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 1,
                             AssignedTo = "user1@company.com",
                             CreatedAt = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #1 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0001",
@@ -177,6 +185,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 2,
                             AssignedTo = "user2@company.com",
                             CreatedAt = new DateTime(2025, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #2 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0002",
@@ -191,6 +200,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 3,
                             AssignedTo = "user3@company.com",
                             CreatedAt = new DateTime(2025, 9, 28, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #3 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0003",
@@ -205,6 +215,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 4,
                             AssignedTo = "user4@company.com",
                             CreatedAt = new DateTime(2025, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #4 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0004",
@@ -219,6 +230,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 5,
                             AssignedTo = "user5@company.com",
                             CreatedAt = new DateTime(2025, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #5 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0005",
@@ -234,6 +246,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 6,
                             AssignedTo = "user6@company.com",
                             CreatedAt = new DateTime(2025, 9, 24, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #6 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0006",
@@ -248,6 +261,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 7,
                             AssignedTo = "user7@company.com",
                             CreatedAt = new DateTime(2025, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #7 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0007",
@@ -262,6 +276,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 8,
                             AssignedTo = "user8@company.com",
                             CreatedAt = new DateTime(2025, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #8 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0008",
@@ -276,6 +291,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 9,
                             AssignedTo = "user9@company.com",
                             CreatedAt = new DateTime(2025, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #9 involving a hardware failure that requires attention.",
                             DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0009",
@@ -290,6 +306,7 @@ namespace IncidentReportingApplication.Migrations
                             Id = 10,
                             AssignedTo = "user10@company.com",
                             CreatedAt = new DateTime(2025, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            CreatedBy = "System",
                             Description = "This is a detailed description of incident #10 involving a network issue that requires attention.",
                             DueDate = new DateTime(2025, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IncidentNumber = "INC-2025-0010",
@@ -305,26 +322,25 @@ namespace IncidentReportingApplication.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
                 });
@@ -333,19 +349,19 @@ namespace IncidentReportingApplication.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -358,19 +374,19 @@ namespace IncidentReportingApplication.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -382,17 +398,17 @@ namespace IncidentReportingApplication.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -404,10 +420,10 @@ namespace IncidentReportingApplication.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -419,20 +435,29 @@ namespace IncidentReportingApplication.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("IncidentReportingApplication.Models.Incident", b =>
+                {
+                    b.HasOne("IncidentReportingApplication.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

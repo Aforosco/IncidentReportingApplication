@@ -11,16 +11,12 @@ namespace IncidentReportingApplication.Entities
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            // Design-time connection string
-            optionsBuilder.UseSqlServer(
-     "Server=DESKTOP-BUR5OAE\\SQLEXPRESS;Database=IncidentDB;Integrated Security=True;TrustServerCertificate=True;"
- );
-
-
-
+            // Design-time connection string for PostgreSQL
+            optionsBuilder.UseNpgsql(
+                "Host=localhost;Port=5432;Database=incidentdb;Username=admin;Password=admin123;"
+            );
 
             return new AppDbContext(optionsBuilder.Options);
         }
-
     }
 }

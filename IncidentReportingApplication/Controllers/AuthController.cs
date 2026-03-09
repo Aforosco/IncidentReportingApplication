@@ -98,7 +98,7 @@ namespace IncidentReportingApplication.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        // Optional: Endpoint to assign admin role (for testing)
+        
         [HttpPost("make-admin/{email}")]
         public async Task<IActionResult> MakeAdmin(string email)
         {
