@@ -1,18 +1,27 @@
+# IncidentReportingApplication/Dockerfile
+
 # Build stage
-# 👇 Explicitly target ARM64 (Apple Silicon)
-FROM --platform=linux/arm64 mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-
-# (rest of your Dockerfile continues here...)
-
-
-COPY . .
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app
-
-# Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /app
-COPY --from=build /app .
-EXPOSE 80
+
+# Copy csproj and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy everything else and build
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+# Production stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS production
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+COPY --from=build /app/publish ./
+
+RUN chown -R appuser:appgroup /app
+USER appuser
+
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "IncidentReportingApplication.dll"]

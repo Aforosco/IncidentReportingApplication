@@ -43,14 +43,15 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost",
+    options.AddPolicy("AllowFrontend",
         policy => policy
             .WithOrigins("http://localhost:5173",
                  "https://localhost:5173",
                 "http://localhost:5174",
-                "https://localhost:5174","http://localhost:8080")
+                "https://localhost:5174","http://localhost:8080","https://frontend.jollytree-f4b4af46.uksouth.azurecontainerapps.io")
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials()
     );
 });
 builder.Services.AddScoped<IncidentReportingApplication.Services.IEmailService,
@@ -189,7 +190,7 @@ using (var scope = app.Services.CreateScope())
 
 
 //app.UseHttpsRedirection();
-app.UseCors("AllowLocalhost");
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

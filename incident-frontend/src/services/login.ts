@@ -9,7 +9,7 @@ interface LoginResponse {
 
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
   try {
-    const res = await fetch("http://localhost:5206/api/auth/login", {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 

@@ -1,6 +1,6 @@
 
 export const register = async (email: string, password: string, fullname:string ) => {
-  const res = await fetch("http://localhost:5206/api/auth/register", {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, fullname }),
