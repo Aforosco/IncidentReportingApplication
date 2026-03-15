@@ -1,0 +1,70 @@
+name: Build and Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout code ──────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Login to Azure ─────────────────────────────────
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ── Login to ACR ───────────────────────────────────
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: incidentappregistry.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # ── Build & Push Backend ───────────────────────────
+      - name: Build and push backend
+        run: |
+          az acr build \
+            --registry incidentappregistry \
+            --image backend:${{ github.sha }} \
+            --platform linux/amd64 \
+            ./IncidentReportingApplication
+
+      # ── Build & Push Frontend ──────────────────────────
+      - name: Build and push frontend
+        run: |
+          az acr build \
+            --registry incidentappregistry \
+            --image frontend:${{ github.sha }} \
+            --platform linux/amd64 \
+            ./incident-frontend
+
+      # ── Deploy Backend ─────────────────────────────────
+      - name: Deploy backend to Container Apps
+        run: |
+          az containerapp update \
+            --name backend \
+            --resource-group incidentapp-rg \
+            --image incidentappregistry.azurecr.io/backend:${{ github.sha }}
+
+      # ── Deploy Frontend ────────────────────────────────
+      - name: Deploy frontend to Container Apps
+        run: |
+          az containerapp update \
+            --name frontend \
+            --resource-group incidentapp-rg \
+            --image incidentappregistry.azurecr.io/frontend:${{ github.sha }}
+
+      # ── Done ───────────────────────────────────────────
+      - name: Deployment complete
+        run: |
+          echo "✅ Deployed successfully!"
+          echo "🌐 Frontend: https://frontend.jollytree-f4b4af46.uksouth.azurecontainerapps.io"
+          echo "🔧 Backend: https://backend.jollytree-f4b4af46.uksouth.azurecontainerapps.io"
